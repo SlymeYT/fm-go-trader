@@ -30,7 +30,7 @@ type Repository struct {
 // config.Engine is the engine service configuration.
 type Engine struct {
 	// Tickers is the array of tickers the trading engine will use to create Traders
-	Tickers string			`envconfig:"TICKERS" required:"true"`
+	Symbols string			`envconfig:"TICKERS" required:"true"`
 	// Timeframes is the array of timeframe the trading engine will use to create Traders
 	Timeframes string		`envconfig:"TIMEFRAMES" required:"true"`
 	// Exchanges is the array of exchanges the trading engine will use to create Traders
@@ -41,13 +41,13 @@ type Engine struct {
 
 type Trader struct {
 	// Ticker is the ticker symbol this instance of Trader is using.
-	Ticker string
+	Symbol string
 	// Timeframe is the interval between bars this instance of Trader is using.
 	Timeframe string
 	// Exchange is the name of the exchange this instance of Trader is using.
 	Exchange string
 	// StartingCapital is the starting capital allocated to this instance of Trader.
-	StartingCapital float64
+	StartingCash float64
 }
 
 // config.Server is the HTTP server configuration.
