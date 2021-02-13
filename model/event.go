@@ -16,7 +16,7 @@ type SignalEvent struct {
 	TraceId 	uuid.UUID
 	Timestamp 	time.Time
 	Symbol 		string
-	SignalPairs map[string]float32 	// map[direction]strength
+	SignalPairs map[string]float32 	// map[advise]strength
 }
 
 // OrderEvent (portfolio) are actions for the execution handler to execute
@@ -26,7 +26,7 @@ type OrderEvent struct {
 	Symbol    	string
 	OrderType 	string  	// MARKET, LIMIT etc
 	Quantity   	float64
-	Direction  	string
+	Direction  	string		// LONG, SHORT or EXIT
 }
 
 // FillEvent (execution) are journals of work done sent back to the portfolio to interpret and update holdings
