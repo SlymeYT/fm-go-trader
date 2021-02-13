@@ -28,6 +28,7 @@ type rsiStrategy struct {
 	symbol 		 string
 }
 
+// GenerateSignal analyses the current symbol data and appends a
 func (s *rsiStrategy) GenerateSignal() error {
 	// Todo: Add some data validation here? Or perhaps return an error from GetLatestBar if data is shit
 
@@ -40,12 +41,6 @@ func (s *rsiStrategy) GenerateSignal() error {
 		return nil
 	}
 	rsi2Array := talib.Rsi(currentData.Closes, 2)
-
-	// Construct base SignalEvent
-	signalEvent := model.SignalEvent{
-		Timestamp: time.Now(),
-		Symbol: s.symbol,
-	}
 
 	// Construct SignalPairs map
 	signalPairs := make(map[string]float32)
@@ -61,10 +56,16 @@ func (s *rsiStrategy) GenerateSignal() error {
 	if rsi2Array[latestBarIndex] < 40 {
 		signalPairs[DirectionCloseShort] = determineSignalStrength()
 	}
-	// Add SignalPairs to SignalEvent
-	signalEvent.SignalPairs = signalPairs
 
-	s.eventQ.Append(signalEvent)
+	// If any SignalPairs
+	if len(signalPairs) != 0 {
+		// Append SignalEvent to the queue
+		s.eventQ.Append(model.SignalEvent{
+			Timestamp:   time.Now(),
+			Symbol:      s.symbol,
+			SignalPairs: signalPairs,
+		})
+	}
 
 	return nil
 }

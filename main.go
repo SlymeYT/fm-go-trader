@@ -24,6 +24,11 @@ func run() error {
 	if err != nil {
 		log.Fatal(fmt.Sprintf("failed to init environment config: %s", err))
 	}
+	print(cfg)
+
+
+	myMap := make(map[string]float32)
+	fmt.Printf("%v", myMap)
 
 	//traderService, err := service.NewTradingEngine(&cfg.Engine, log)
 	//if err != nil {
