@@ -17,6 +17,8 @@ type portfolio struct {
 	log              *zap.Logger
 	eventQ           *queue.Queue
 	data             data.Handler
+	sizeManager		 SizeManager
+	riskManager		 RiskManager
 	symbol           string
 	initialCash      float64
 	currentCash      float64
@@ -26,3 +28,26 @@ type portfolio struct {
 	holdings         map[string]model.Position
 	historicHoldings map[string][]model.Position
 }
+
+func (p *portfolio) UpdateFromMarket() error {
+	return nil
+}
+
+func (p *portfolio) GenerateOrders() error {
+	return nil
+}
+
+func (p *portfolio) UpdateFromFill() error {
+	return nil
+}
+
+func NewPortfolio() *portfolio {
+	return &portfolio{}
+}
+
+func parseAdvise(signalPairs map[string]float32) string {
+	return "LONG" // SHORT or EXIT
+}
+
+
+
