@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"github.com/pkg/errors"
-	"go.uber.org/zap"
 	"gitlab.com/open-source-keir/financial-modelling/trading/fm-trader/config"
+	"go.uber.org/zap"
 )
 
 func main() {
@@ -32,8 +32,8 @@ func run() error {
 	//	log.Fatal(fmt.Sprintf("failed to init trading engine: %s", err))
 	//}
 	//
-	//server := api.NewServer(&cfg.Server, log, traderService)
-	//server.Run()
+	server := api.NewServer(&cfg.Server, log, traderService)
+	server.Run()
 
 	return nil
 }
