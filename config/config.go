@@ -36,7 +36,7 @@ type Engine struct {
 	// Exchanges is the array of exchanges the trading engine will use to create Traders
 	Exchanges string 		`envconfig:"EXCHANGES" required:"true"`
 	// StartingCash
-	StartingCash float64	`envconfig:"STARTING_CAPITAL" required:"true"`
+	StartingCash float64	`envconfig:"STARTING_CASH" required:"true"`
 }
 
 // config.Server is the HTTP server configuration
