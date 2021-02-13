@@ -9,6 +9,8 @@ import (
 type MarketEvent struct {
 	TraceId 	uuid.UUID
 	Timestamp 	time.Time
+	Symbol		string
+	Close		float64
 }
 
 // SignalEvent (strategy) are advisory signals for the portfolio to interpret
@@ -26,7 +28,7 @@ type OrderEvent struct {
 	Symbol    	string
 	OrderType 	string  	// MARKET, LIMIT etc
 	Quantity   	float64		// abs(quantity)
-	Direction  	string		// BUY or SELL
+	Direction  	string		// LONG, CLOSE_LONG, SHORT or CLOSE_SHORT
 }
 
 // FillEvent (execution) are journals of work done sent back to the portfolio to interpret and update holdings
@@ -36,7 +38,7 @@ type FillEvent struct {
 	Symbol     		string
 	Exchange   		string
 	Quantity   		float64
-	Direction  		string 		// BUY or SELL
+	Direction  		string 		// LONG, CLOSE_LONG, SHORT or CLOSE_SHORT
 	FillValue   	float64
 	ExchangeFee 	float64
 	SlippageFee		float64
