@@ -31,8 +31,9 @@ func (se *simulatedExecution) GenerateFills(order model.OrderEvent) error {
 		Quantity:  order.Quantity,
 		Direction: order.Direction,
 	}
-	fill.CommissionFee = fill.CalculateCommissionFee() 	// 0.0
+	fill.ExchangeFee = fill.CalculateExchangeFee() 		// 0.0
 	fill.SlippageFee = fill.CalculateSlippageFee()		// 0.0
+	fill.NetworkFee = fill.CalculateNetworkFee()		// 0.0
 	fill.FillCost = fill.CalculateFillCost() 			// 0.0
 
 	se.eventQ.Append(fill)
