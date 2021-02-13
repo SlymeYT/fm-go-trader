@@ -34,14 +34,14 @@ type FillEvent struct {
 	Direction  		string
 	FillCost   		float64
 	CommissionFee 	float64
-	ExchangeFee		float64
+	SlippageFee		float64
 }
 
 func (f *FillEvent) CalculateCommissionFee() float64 {
 	return 0.0
 }
 
-func (f *FillEvent) CalculateExchangeFee() float64 {
+func (f *FillEvent) CalculateSlippageFee() float64 {
 	return 0.0
 }
 

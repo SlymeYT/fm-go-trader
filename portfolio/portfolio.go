@@ -20,6 +20,9 @@ type portfolio struct {
 	symbol           string
 	initialCash      float64
 	currentCash      float64
+	currentValue 	 float64
 	orders           []model.OrderEvent
 	fills		     []model.FillEvent
+	holdings         map[string]model.Position
+	historicHoldings map[string][]model.Position
 }
