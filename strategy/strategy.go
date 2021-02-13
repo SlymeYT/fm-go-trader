@@ -18,7 +18,7 @@ const (
 )
 
 type Strategy interface {
-	GenerateSignal() error
+	GenerateSignal(model.MarketEvent) error
 }
 
 type rsiStrategy struct {
@@ -29,7 +29,7 @@ type rsiStrategy struct {
 }
 
 // GenerateSignal analyses the current symbol data and appends a
-func (s *rsiStrategy) GenerateSignal() error {
+func (s *rsiStrategy) GenerateSignal(market model.MarketEvent) error {
 	// Todo: Add some data validation here? Or perhaps return an error from GetLatestBar if data is shit
 
 	// Get current available data and the index of the latest bar
@@ -61,7 +61,8 @@ func (s *rsiStrategy) GenerateSignal() error {
 	if len(signalPairs) != 0 {
 		// Append SignalEvent to the queue
 		s.eventQ.Append(model.SignalEvent{
-			Timestamp:   time.Now(),
+			TraceId: 	 market.TraceId,
+			Timestamp:   time.Now().Truncate(time.Nanosecond),
 			Symbol:      s.symbol,
 			SignalPairs: signalPairs,
 		})
