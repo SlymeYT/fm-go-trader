@@ -35,7 +35,6 @@ type FillEvent struct {
 	FillCost   		float64
 	CommissionFee 	float64
 	ExchangeFee		float64
-	//IsExit 			bool
 }
 
 func (f *FillEvent) CalculateCommissionFee() float64 {
