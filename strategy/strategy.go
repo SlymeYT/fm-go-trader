@@ -70,6 +70,7 @@ func (s *rsiStrategy) GenerateSignal() error {
 	return nil
 }
 
+// NewSimpleRSIStrategy constructs a new Strategy instance
 func NewSimpleRSIStrategy(cfg config.Trader, eventQ *queue.Queue, data data.Handler) *rsiStrategy {
 	return &rsiStrategy{
 		log:    cfg.Log,
@@ -79,6 +80,7 @@ func NewSimpleRSIStrategy(cfg config.Trader, eventQ *queue.Queue, data data.Hand
 	}
 }
 
+// determineSignalStrength calculates the strength of a signal direction
 func determineSignalStrength() float32{
 	return 1.0
 }
