@@ -2,8 +2,8 @@ package data
 
 import (
 	"github.com/sheerun/queue"
+	"gitlab.com/open-source-keir/financial-modelling/trading/fm-trader/model"
 	"go.uber.org/zap"
-	"time"
 )
 
 const(
@@ -14,7 +14,7 @@ const(
 type Handler interface {
 	ShouldContinue() bool
 	UpdateData() error
-	GetLatestData() (*symbolData, int64)
+	GetLatestData() (*model.SymbolData, int64)
 }
 
 type Config struct {
@@ -27,23 +27,12 @@ type Config struct {
 
 // historicHandler is a Handler for backtesting trading strategies with historic data
 type historicHandler struct {
-	log               *zap.Logger	// Pointer to universal logger
-	eventQ            *queue.Queue	// Pointer to the trader pair's event queue
-	symbol            string     	// symbol the data is representing
-	allSymbolData     symbolData 	// All the data available from historic data file
-	currentSymbolData symbolData 	// Data available up to current timestamp
-	latestBarIndex    int64      	// Current index of the latest bar in the symbolData
-}
-
-// symbolData represents a symbol's struct of market data arrays (OHLCV) and associated indicators values
-type symbolData struct {
-	Timestamps 	[]time.Time
-	Opens 		[]float64
-	Highs 		[]float64
-	Lows 		[]float64
-	Closes 		[]float64
-	Volumes 	[]uint64
-	Indicators 	map[string][]interface{}
+	log               *zap.Logger		// Pointer to universal logger
+	eventQ            *queue.Queue		// Pointer to the trader pair's event queue
+	symbol            string     		// symbol the data is representing
+	allSymbolData     model.SymbolData 	// All the data available from historic data file
+	currentSymbolData model.SymbolData 	// Data available up to current timestamp
+	latestBarIndex    int64      		// Current index of the latest bar in the symbolData
 }
 
 // ShouldContinue determines if the market data feed should be terminated
@@ -55,5 +44,30 @@ func (sh *historicHandler) ShouldContinue() bool {
 	return shouldContinue
 }
 
+// UpdateData updates the latestTickerData field & adds a MarketEvent to the queue to notify Strategy & Portfolio
+func (sh *historicHandler) UpdateData() error {
+	// Increment latest bar index
+	sh.latestBarIndex++
+
+	// Add latest bar to currentSymbolData
+	sh.currentSymbolData.AddBar(model.Bar{
+		Timestamp: sh.allSymbolData.Timestamps[sh.latestBarIndex],
+		Open: sh.allSymbolData.Opens[sh.latestBarIndex],
+		High: sh.allSymbolData.Highs[sh.latestBarIndex],
+		Low: sh.allSymbolData.Lows[sh.latestBarIndex],
+		Close: sh.allSymbolData.Closes[sh.latestBarIndex],
+		Volume: sh.allSymbolData.Volumes[sh.latestBarIndex],
+	})
+
+	// Add MarketEvent to the queue
+	//sh.eventQ.Append(model.MarketEvent{
+	//	EventType: "MARKET_EVENT",
+	//})
+	return nil
+}
+
+func (sh *historicHandler) GetLatestData() (*model.SymbolData, int64) {
+	return &sh.currentSymbolData, sh.latestBarIndex
+}
 
 
