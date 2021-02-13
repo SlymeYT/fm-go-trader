@@ -27,7 +27,7 @@ type Config struct {
 
 // historicHandler is a Handler for backtesting trading strategies with historic data
 type historicHandler struct {
-	log               *zap.Logger		// Pointer to universal logger
+	log               *zap.Logger		// Pointer to repository logger
 	eventQ            *queue.Queue		// Pointer to the trader pair's event queue
 	symbol            string     		// symbol the data is representing
 	allSymbolData     model.SymbolData 	// All the data available from historic data file
@@ -60,12 +60,11 @@ func (sh *historicHandler) UpdateData() error {
 	})
 
 	// Add MarketEvent to the queue
-	//sh.eventQ.Append(model.MarketEvent{
-	//	EventType: "MARKET_EVENT",
-	//})
+	sh.eventQ.Append(model.MarketEvent{})
 	return nil
 }
 
+// GetLatestData returns a tuple of (data up to the current timestamp, latest bar index)
 func (sh *historicHandler) GetLatestData() (*model.SymbolData, int64) {
 	return &sh.currentSymbolData, sh.latestBarIndex
 }
