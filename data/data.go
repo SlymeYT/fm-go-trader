@@ -25,7 +25,8 @@ type Config struct {
 	Exchange        string
 }
 
-type simulatedHandler struct {
+// historicHandler is a Handler for backtesting trading strategies with historic data
+type historicHandler struct {
 	log               *zap.Logger	// Pointer to universal logger
 	eventQ            *queue.Queue	// Pointer to the trader pair's event queue
 	symbol            string     	// symbol the data is representing
@@ -34,6 +35,7 @@ type simulatedHandler struct {
 	latestBarIndex    int64      	// Current index of the latest bar in the symbolData
 }
 
+// symbolData represents a symbol's struct of market data arrays (OHLCV) and associated indicators values
 type symbolData struct {
 	Timestamps 	[]time.Time
 	Opens 		[]float64
@@ -44,7 +46,8 @@ type symbolData struct {
 	Indicators 	map[string][]interface{}
 }
 
-func (sh *simulatedHandler) ShouldContinue() bool {
+// ShouldContinue determines if the market data feed should be terminated
+func (sh *historicHandler) ShouldContinue() bool {
 	var shouldContinue bool
 	if sh.latestBarIndex < int64(len(sh.allSymbolData.Timestamps)) - 1 {
 		shouldContinue = true
