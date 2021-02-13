@@ -43,7 +43,7 @@ func (sh *historicHandler) ShouldContinue() bool {
 	return shouldContinue
 }
 
-// UpdateData updates the latestTickerData field & adds a MarketEvent to the queue to notify Strategy & Portfolio
+// UpdateData updates the currentSymbolData field & adds a MarketEvent to the queue to notify Strategy & Portfolio
 func (sh *historicHandler) UpdateData() error {
 	// Increment latest bar index
 	sh.latestBarIndex++
@@ -71,7 +71,7 @@ func (sh *historicHandler) GetLatestData() (*model.SymbolData, int64) {
 // NewHistoricHandler returns an instance of a data.historicHandler
 func NewHistoricHandler(cfg config.Trader, log *zap.Logger,  eventQ *queue.Queue) (*historicHandler, error) {
 	filePath := buildCSVFilePath(cfg)
-	log.Debug(fmt.Sprintf("loading CSV ticker data with file path: %s", filePath))
+	log.Debug(fmt.Sprintf("loading CSV symbol data with file path: %s", filePath))
 
 	allSymbolData, err := loadCSVSymbolData(filePath)
 	if err != nil {
@@ -154,7 +154,7 @@ func loadCSVSymbolData(filePath string) (model.SymbolData, error) {
 		volumes = append(volumes, volume)
 	}
 
-	allTickerData := model.SymbolData{
+	allSymbolData := model.SymbolData{
 		Timestamps: timestamps,
 		Opens:      opens,
 		Highs:      highs,
@@ -164,7 +164,7 @@ func loadCSVSymbolData(filePath string) (model.SymbolData, error) {
 		Indicators: make(map[string][]interface{}),
 	}
 
-	return allTickerData, nil
+	return allSymbolData, nil
 }
 
 // ReadCSV reads the file at the provided filePath and returns a 2D array of strings to represent its contents
