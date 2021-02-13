@@ -44,5 +44,13 @@ type symbolData struct {
 	Indicators 	map[string][]interface{}
 }
 
+func (sh *simulatedHandler) ShouldContinue() bool {
+	var shouldContinue bool
+	if sh.latestBarIndex < int64(len(sh.allSymbolData.Timestamps)) - 1 {
+		shouldContinue = true
+	}
+	return shouldContinue
+}
+
 
 
