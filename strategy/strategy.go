@@ -85,4 +85,3 @@ func NewSimpleRSIStrategy(cfg config.Trader, eventQ *queue.Queue, data data.Hand
 func determineSignalStrength() float32{
 	return 1.0
 }
-

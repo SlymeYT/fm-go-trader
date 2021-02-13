@@ -48,6 +48,3 @@ func NewPortfolio() *portfolio {
 func parseAdvise(signalPairs map[string]float32) string {
 	return "LONG" // SHORT or EXIT
 }
-
-
-

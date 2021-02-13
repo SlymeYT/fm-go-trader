@@ -23,4 +23,3 @@ type Position struct {
 	UnrealProfitLoss		float64 	// unrealised P&L whilst Position open
 	ResultProfitLoss		float64 	// realised P&L after Position closed
 }
-

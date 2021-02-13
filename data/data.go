@@ -189,5 +189,3 @@ func ReadCSV(filePath string) ([][]string, error) {
 
 	return lines, nil
 }
-
-
