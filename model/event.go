@@ -25,8 +25,8 @@ type OrderEvent struct {
 	Timestamp 	time.Time
 	Symbol    	string
 	OrderType 	string  	// MARKET, LIMIT etc
-	Quantity   	float64
-	Direction  	string		// LONG, SHORT or EXIT
+	Quantity   	float64		// abs(quantity)
+	Direction  	string		// BUY or SELL
 }
 
 // FillEvent (execution) are journals of work done sent back to the portfolio to interpret and update holdings
@@ -36,8 +36,8 @@ type FillEvent struct {
 	Symbol     		string
 	Exchange   		string
 	Quantity   		float64
-	Direction  		string
-	FillCost   		float64
+	Direction  		string 		// BUY or SELL
+	FillValue   	float64
 	ExchangeFee 	float64
 	SlippageFee		float64
 	NetworkFee		float64

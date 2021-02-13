@@ -11,10 +11,10 @@ import (
 )
 
 const (
-	DirectionLong 		= "LONG"
-	DirectionCloseLong  = "CLOSE_LONG"
-	DirectionShort 		= "SHORT"
-	DirectionCloseShort = "CLOSE_SHORT"
+	AdviseLong 			= "LONG"
+	AdviseCloseLong 	= "CLOSE_LONG"
+	AdviseShort 		= "SHORT"
+	AdviseCloseShort 	= "CLOSE_SHORT"
 )
 
 type Strategy interface {
@@ -45,16 +45,16 @@ func (s *rsiStrategy) GenerateSignal(market model.MarketEvent) error {
 	// Construct SignalPairs map
 	signalPairs := make(map[string]float32)
 	if rsi2Array[latestBarIndex] < 40 {
-		signalPairs[DirectionLong] = determineSignalStrength()
+		signalPairs[AdviseLong] = determineSignalStrength()
 	}
 	if rsi2Array[latestBarIndex] > 60 {
-		signalPairs[DirectionCloseLong] = determineSignalStrength()
+		signalPairs[AdviseCloseLong] = determineSignalStrength()
 	}
 	if rsi2Array[latestBarIndex] > 60 {
-		signalPairs[DirectionShort] = determineSignalStrength()
+		signalPairs[AdviseShort] = determineSignalStrength()
 	}
 	if rsi2Array[latestBarIndex] < 40 {
-		signalPairs[DirectionCloseShort] = determineSignalStrength()
+		signalPairs[AdviseCloseShort] = determineSignalStrength()
 	}
 
 	// If any SignalPairs
@@ -81,7 +81,7 @@ func NewSimpleRSIStrategy(cfg config.Trader, eventQ *queue.Queue, data data.Hand
 	}
 }
 
-// determineSignalStrength calculates the strength of a signal direction
+// determineSignalStrength calculates the strength of a signal advise
 func determineSignalStrength() float32{
 	return 1.0
 }

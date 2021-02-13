@@ -12,6 +12,7 @@ type Size struct {
 }
 
 func (s *Size) SizeOrder(order model.OrderEvent) (*model.OrderEvent, error) {
+	// Todo: Implement a basic version of this so I'm not creating orders that I don't have bean for etc.
 	order.Quantity = 10
 	return &order, nil
 }
