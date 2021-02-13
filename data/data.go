@@ -3,6 +3,7 @@ package data
 import (
 	"encoding/csv"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"github.com/sheerun/queue"
 	"gitlab.com/open-source-keir/financial-modelling/trading/fm-trader/config"
@@ -44,23 +45,26 @@ func (sh *historicHandler) ShouldContinue() bool {
 }
 
 // UpdateData updates the currentSymbolData field & adds a MarketEvent to the queue to notify Strategy & Portfolio
-func (sh *historicHandler) UpdateData() error {
+func (sh *historicHandler) UpdateData() {
 	// Increment latest bar index
 	sh.latestBarIndex++
 
 	// Add latest bar to currentSymbolData
-	sh.currentSymbolData.AddBar(model.Bar{
+	latestBar := model.Bar{
 		Timestamp: sh.allSymbolData.Timestamps[sh.latestBarIndex],
-		Open: sh.allSymbolData.Opens[sh.latestBarIndex],
-		High: sh.allSymbolData.Highs[sh.latestBarIndex],
-		Low: sh.allSymbolData.Lows[sh.latestBarIndex],
-		Close: sh.allSymbolData.Closes[sh.latestBarIndex],
-		Volume: sh.allSymbolData.Volumes[sh.latestBarIndex],
-	})
+		Open:      sh.allSymbolData.Opens[sh.latestBarIndex],
+		High:      sh.allSymbolData.Highs[sh.latestBarIndex],
+		Low:       sh.allSymbolData.Lows[sh.latestBarIndex],
+		Close:     sh.allSymbolData.Closes[sh.latestBarIndex],
+		Volume:    sh.allSymbolData.Volumes[sh.latestBarIndex],
+	}
+	sh.currentSymbolData.AddBar(latestBar)
 
 	// Add MarketEvent to the queue
-	sh.eventQ.Append(model.MarketEvent{})
-	return nil
+	sh.eventQ.Append(model.MarketEvent{
+		TraceId: uuid.New(),
+		Timestamp: latestBar.Timestamp,
+	})
 }
 
 // GetLatestData returns a tuple of (data up to the current timestamp, latest bar index)

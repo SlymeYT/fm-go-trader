@@ -21,5 +21,5 @@ type portfolio struct {
 	initialCash      float64
 	currentCash      float64
 	orders           []model.OrderEvent
-	transactions     []model.FillEvent
+	fills		     []model.FillEvent
 }

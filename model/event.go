@@ -1,25 +1,32 @@
 package model
 
-import "time"
+import (
+	"github.com/google/uuid"
+	"time"
+)
 
 type MarketEvent struct {
-	Timestamp time.Time
+	TraceId 	uuid.UUID
+	Timestamp 	time.Time
 }
 
 type SignalEvent struct {
+	TraceId 	uuid.UUID
 	Timestamp 	time.Time
 	Symbol 		string
 	SignalPairs map[string]float32 	// map[direction]strength
 }
 
 type OrderEvent struct {
+	TraceId 	uuid.UUID
 	Timestamp 	time.Time
 	Symbol    	string
-	Quantity   		float64
-	Direction  		string
+	Quantity   	float64
+	Direction  	string
 }
 
 type FillEvent struct {
+	TraceId 		uuid.UUID
 	Timestamp  		time.Time
 	Symbol     		string
 	Exchange   		string
