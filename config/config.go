@@ -51,6 +51,8 @@ type Server struct {
 
 // config.Trader is the trader pair instance configuration
 type Trader struct {
+	// Log is the logger this instance of Trader is using
+	Log *zap.Logger
 	// Symbol is the ticker symbol this instance of Trader is using
 	Symbol string
 	// Timeframe is the interval between bars this instance of Trader is using

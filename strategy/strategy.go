@@ -3,6 +3,7 @@ package strategy
 import (
 	"github.com/markcheno/go-talib"
 	"github.com/sheerun/queue"
+	"gitlab.com/open-source-keir/financial-modelling/trading/fm-trader/config"
 	"gitlab.com/open-source-keir/financial-modelling/trading/fm-trader/data"
 	"gitlab.com/open-source-keir/financial-modelling/trading/fm-trader/model"
 	"go.uber.org/zap"
@@ -20,14 +21,14 @@ type Strategy interface {
 	GenerateSignal() error
 }
 
-type simpleRSIStrategy struct {
+type rsiStrategy struct {
 	log          *zap.Logger
 	eventQ       *queue.Queue
 	data         data.Handler
 	symbol 		 string
 }
 
-func (s *simpleRSIStrategy) GenerateSignal() error {
+func (s *rsiStrategy) GenerateSignal() error {
 	// Todo: Add some data validation here? Or perhaps return an error from GetLatestBar if data is shit
 
 	// Get current available data and the index of the latest bar
@@ -66,6 +67,15 @@ func (s *simpleRSIStrategy) GenerateSignal() error {
 	s.eventQ.Append(signalEvent)
 
 	return nil
+}
+
+func NewSimpleRSIStrategy(cfg config.Trader, eventQ *queue.Queue, data data.Handler) *rsiStrategy {
+	return &rsiStrategy{
+		log:    cfg.Log,
+		eventQ: eventQ,
+		data:   data,
+		symbol: cfg.Symbol,
+	}
 }
 
 func determineSignalStrength() float32{
