@@ -23,6 +23,7 @@ type SymbolData struct {
 	Indicators 	map[string][]interface{}
 }
 
+// AddBar appends each bar field to the relevant SymbolData array
 func (td *SymbolData) AddBar(bar Bar) {
 	td.Timestamps = append(td.Timestamps, bar.Timestamp)
 	td.Opens = append(td.Opens, bar.Open)

@@ -25,15 +25,13 @@ func run() error {
 		log.Fatal(fmt.Sprintf("failed to init environment config: %s", err))
 	}
 
-	print(cfg)
-
 	//traderService, err := service.NewTradingEngine(&cfg.Engine, log)
 	//if err != nil {
 	//	log.Fatal(fmt.Sprintf("failed to init trading engine: %s", err))
 	//}
 	//
-	server := api.NewServer(&cfg.Server, log, traderService)
-	server.Run()
+	//server := api.NewServer(&cfg.Server, log, traderService)
+	//server.Run()
 
 	return nil
 }

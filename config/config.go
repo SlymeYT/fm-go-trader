@@ -17,17 +17,17 @@ const (
 	Directory     = "config"
 )
 
-// Config is the complete configuration loaded from the file associated with ActiveProfile.
+// Config is the complete configuration loaded from the file associated with ActiveProfile
 type Config struct {
 	Engine Engine
 	Server Server
 }
 
-// config.Repository is the repository & persistence configuration.
+// config.Repository is the repository & persistence configuration
 type Repository struct {
 }
 
-// config.Engine is the engine service configuration.
+// config.Engine is the engine service configuration
 type Engine struct {
 	// Tickers is the array of tickers the trading engine will use to create Traders
 	Symbols string			`envconfig:"TICKERS" required:"true"`
@@ -35,22 +35,11 @@ type Engine struct {
 	Timeframes string		`envconfig:"TIMEFRAMES" required:"true"`
 	// Exchanges is the array of exchanges the trading engine will use to create Traders
 	Exchanges string 		`envconfig:"EXCHANGES" required:"true"`
-	// Starting
-	StartingCapital float64 `envconfig:"STARTING_CAPITAL" required:"true"`
+	// StartingCash
+	StartingCash float64	`envconfig:"STARTING_CAPITAL" required:"true"`
 }
 
-type Trader struct {
-	// Ticker is the ticker symbol this instance of Trader is using.
-	Symbol string
-	// Timeframe is the interval between bars this instance of Trader is using.
-	Timeframe string
-	// Exchange is the name of the exchange this instance of Trader is using.
-	Exchange string
-	// StartingCapital is the starting capital allocated to this instance of Trader.
-	StartingCash float64
-}
-
-// config.Server is the HTTP server configuration.
+// config.Server is the HTTP server configuration
 type Server struct {
 	// Name is the Name of the function the Server is hosting.
 	Name string 		`envconfig:"SERVER_NAME" required:"true"`
@@ -58,6 +47,18 @@ type Server struct {
 	Version string 		`envconfig:"SERVER_VERSION" required:"true"`
 	// Port is the HTTP Port to serve on
 	Port int 			`envconfig:"SERVER_PORT" required:"true"`
+}
+
+// config.Trader is the trader pair instance configuration
+type Trader struct {
+	// Symbol is the ticker symbol this instance of Trader is using
+	Symbol string
+	// Timeframe is the interval between bars this instance of Trader is using
+	Timeframe string
+	// Exchange is the name of the exchange this instance of Trader is using
+	Exchange string
+	// StartingCash is the starting capital allocated to this instance of Trader
+	StartingCash float64
 }
 
 func GetConfig(log *zap.Logger) (*Config, error) {
