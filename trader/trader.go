@@ -2,7 +2,9 @@ package trader
 
 import (
 	"fmt"
+	"github.com/pkg/errors"
 	"github.com/sheerun/queue"
+	"gitlab.com/open-source-keir/financial-modelling/trading/fm-trader/config"
 	"gitlab.com/open-source-keir/financial-modelling/trading/fm-trader/data"
 	"gitlab.com/open-source-keir/financial-modelling/trading/fm-trader/execution"
 	"gitlab.com/open-source-keir/financial-modelling/trading/fm-trader/model"
@@ -28,7 +30,7 @@ func (t *trader) Run() error {
 	for {
 		// Todo: Need to add check for stop loss and take profit
 		if t.data.ShouldContinue() {
-			_ = t.data.UpdateData()
+			t.data.UpdateData()
 		} else {
 			t.log.Info("Backtest has finished.")
 			// Save & Print results
@@ -63,4 +65,30 @@ func (t *trader) Run() error {
 		//time.Sleep(2*time.Millisecond)
 	}
 	return nil
+}
+
+func NewTrader(cfg config.Trader) (*trader, error) {
+	eventQ := queue.New()
+
+	dataHandler, err := data.NewHistoricHandler(cfg, eventQ)
+	if err != nil {
+		return &trader{}, errors.Wrap(err, "failed to init dataHandler")
+	}
+
+	basicStrategy := strategy.NewSimpleRSIStrategy(cfg, eventQ, dataHandler)
+
+	basicPortfolio := portfolio.NewPortfolio(cfg, eventQ, dataHandler)
+
+	basicExecution := execution.NewSimulatedExecution(cfg, eventQ)
+
+	trader := &trader{
+		log:       cfg.Log,
+		eventQ:    eventQ,
+		data:      dataHandler,
+		strategy:  basicStrategy,
+		portfolio: basicPortfolio,
+		execution: basicExecution,
+	}
+
+	return trader, nil
 }

@@ -21,7 +21,7 @@ const(
 
 type Handler interface {
 	ShouldContinue() bool
-	UpdateData() error
+	UpdateData()
 	GetLatestData() (*model.SymbolData, int64)
 }
 
@@ -75,9 +75,9 @@ func (sh *historicHandler) GetLatestData() (*model.SymbolData, int64) {
 }
 
 // NewHistoricHandler returns an instance of a data.historicHandler
-func NewHistoricHandler(cfg config.Trader, log *zap.Logger,  eventQ *queue.Queue) (*historicHandler, error) {
+func NewHistoricHandler(cfg config.Trader, eventQ *queue.Queue) (*historicHandler, error) {
 	filePath := buildCSVFilePath(cfg)
-	log.Debug(fmt.Sprintf("loading CSV symbol data with file path: %s", filePath))
+	cfg.Log.Debug(fmt.Sprintf("loading CSV symbol data with file path: %s", filePath))
 
 	allSymbolData, err := loadCSVSymbolData(filePath)
 	if err != nil {
@@ -88,7 +88,7 @@ func NewHistoricHandler(cfg config.Trader, log *zap.Logger,  eventQ *queue.Queue
 	var currentSymbolData model.SymbolData
 
 	handler := &historicHandler{
-		log:            	log,
+		log:            	cfg.Log,
 		eventQ:         	eventQ,
 		symbol:         	cfg.Symbol,
 		allSymbolData:  	allSymbolData,

@@ -185,8 +185,8 @@ func (p *portfolio) UpdateFromFill(fill model.FillEvent) error {
 
 func NewPortfolio(cfg config.Trader, eventQ *queue.Queue, data data.Handler) *portfolio {
 	return &portfolio{
-		log:              cfg.Log,
-		eventQ:           eventQ,
+		log:               cfg.Log,
+		eventQ:            eventQ,
 		data:              data,
 		sizeManager:       &Size{DefaultOrderValue: cfg.DefaultOrderValue},
 		riskManager:       &Risk{DefaultOrderType: OrderTypeMarket},

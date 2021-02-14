@@ -41,9 +41,9 @@ func (se *simulatedExecution) GenerateFills(order model.OrderEvent) error {
 }
 
 // NewSimulatedExecution constructs an Execution instance
-func NewSimulatedExecution(cfg config.Trader, logger *zap.Logger, eventQ *queue.Queue) *simulatedExecution {
+func NewSimulatedExecution(cfg config.Trader, eventQ *queue.Queue) *simulatedExecution {
 	return &simulatedExecution{
-		log:      logger,
+		log:      cfg.Log,
 		eventQ:   eventQ,
 		exchange: cfg.Exchange,
 	}
