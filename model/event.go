@@ -41,10 +41,10 @@ type FillEvent struct {
 	Exchange   		string
 	Quantity   		float64		// +ve or -ve Quantity depending on Decision
 	Decision  		string 		// LONG, CLOSE_LONG, SHORT or CLOSE_SHORT
-	FillValueGross  float64		// Todo: say that fees are not included
-	ExchangeFee 	float64
-	SlippageFee		float64
-	NetworkFee		float64
+	FillValueGross  float64		// abs(Quantity) * ClosePrice, excluding TotalFees
+	ExchangeFee 	float64		// All fees that Exchange imposes on the FillEvent
+	SlippageFee		float64		// Financial consequences of FillEvent Slippage modelled as a fee
+	NetworkFee		float64		// All fees incurred from transacting over the network (DEX) eg/ GAS
 }
 
 // DetermineFillDirection determines the Direction of a FillEvent based on it's Quantity and Decision
@@ -75,7 +75,7 @@ func (f *FillEvent) CalculateNetworkFee() float64 {
 	return 0.0
 }
 
-// CalculateFillValue calculates the total value transacted by the FillEvent
-func (f *FillEvent) CalculateFillValue() float64 {
+// CalculateFillValueGross calculates the total value transacted by the FillEvent excluding TotalFees
+func (f *FillEvent) CalculateFillValueGross() float64 {
 	return 0.0
 }

@@ -29,12 +29,12 @@ func (se *simulatedExecution) GenerateFills(order model.OrderEvent) error {
 		Symbol:    order.Symbol,
 		Exchange:  se.exchange,
 		Quantity:  order.Quantity,
-		Direction: order.Direction,
+		Decision: order.Decision,
 	}
-	fill.ExchangeFee = fill.CalculateExchangeFee() 		// 0.0
-	fill.SlippageFee = fill.CalculateSlippageFee()		// 0.0
-	fill.NetworkFee = fill.CalculateNetworkFee()		// 0.0
-	fill.FillValue = fill.CalculateFillValue() 			// 0.0
+	fill.ExchangeFee = fill.CalculateExchangeFee() 		 // 0.0
+	fill.SlippageFee = fill.CalculateSlippageFee()		 // 0.0
+	fill.NetworkFee = fill.CalculateNetworkFee()		 // 0.0
+	fill.FillValueGross = fill.CalculateFillValueGross() // 0.0
 
 	se.eventQ.Append(fill)
 	return nil

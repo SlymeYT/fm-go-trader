@@ -1,6 +1,7 @@
 package portfolio
 
 import (
+	"github.com/pkg/errors"
 	"github.com/sheerun/queue"
 	"gitlab.com/open-source-keir/financial-modelling/trading/fm-trader/data"
 	"gitlab.com/open-source-keir/financial-modelling/trading/fm-trader/model"
@@ -32,7 +33,10 @@ type portfolio struct {
 func (p *portfolio) UpdateFromMarket(market model.MarketEvent) error {
 	// Update currentHoldings
 	if position, isInvested := p.isInvested(p.symbol); isInvested {
-		position.Update(market)
+		err := position.Update(market)
+		if err != nil {
+			return errors.Wrap(err, "failed portfolio.UpdateFromMarket()")
+		}
 		p.holdings[p.symbol] = position
 	}
 
@@ -50,7 +54,7 @@ func (p *portfolio) UpdateFromFill() error {
 func (p *portfolio) isInvested(symbol string) (model.Position, bool) {
 	position, isInHoldings := p.holdings[symbol]
 	// If present in current holdings & exit fill value is zero
-	if isInHoldings && position.ExitFillValue == 0 {
+	if isInHoldings && position.ExitFillValueNet == 0 {
 		return position, true
 	}
 	return position, false
