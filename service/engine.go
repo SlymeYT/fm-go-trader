@@ -10,8 +10,8 @@ import (
 
 type TradingEngine interface {
 	RunBacktest() error
-	RunTraderLive()
-	RunTraderDry()
+	RunTraderLive() error
+	RunTraderDry() error
 }
 
 type tradingEngine struct {

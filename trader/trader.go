@@ -28,7 +28,7 @@ type trader struct {
 
 func (t *trader) Run() error {
 	for {
-		// Todo: Need to add check for stop loss and take profit
+		// Todo: Need to add check for stop loss and take profit - probably in strategy
 		if t.data.ShouldContinue() {
 			t.data.UpdateData()
 		} else {
