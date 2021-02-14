@@ -8,6 +8,11 @@ import (
 	"time"
 )
 
+const (
+	DirectionLong = "LONG"
+	DirectionShort = "SHORT"
+)
+
 type Position struct {
 	LastUpdateTraceId		uuid.UUID
 	LastUpdateTimestamp 	time.Time
@@ -32,6 +37,7 @@ type Position struct {
 	ResultProfitLoss		float64 			// realised P&L after Position closed
 }
 
+// Update updates the Position instance on every MarketEvent
 func (p *Position) Update(market MarketEvent) error {
 	p.LastUpdateTraceId = market.TraceId
 	p.LastUpdateTimestamp = market.Timestamp
@@ -41,17 +47,16 @@ func (p *Position) Update(market MarketEvent) error {
 
 	// Unreal Profit & Loss
 	unrealExitFillValue := p.CurrentMarketValue - p.EnterFillFees["TotalFees"]  // Approximate exit fees with enter fees
-	if p.Direction == "LONG" && p.Quantity > 0 {
-		p.UnrealProfitLoss = calculateLongProfitLoss(unrealExitFillValue, p.EnterFillValueNet)
-	} else if p.Direction == "SHORT" && p.Quantity < 0 {
-		p.UnrealProfitLoss = calculateShortProfitLoss(unrealExitFillValue, p.ExitFillValueNet)
-	} else {
-		return errors.New(fmt.Sprintf("failed Position.Update() due to ambiguous Direction & Quantity. Position: %+v", p))
+	unrealProfitLoss, err := calculateProfitLoss(p.Direction, p.Quantity, unrealExitFillValue, p.EnterFillValueNet)
+	if err != nil {
+		return errors.Wrap(err, fmt.Sprintf("failed Position.Update() for Position: %+v", p))
 	}
+	p.UnrealProfitLoss = unrealProfitLoss
 
 	return nil
 }
 
+// Enter enriches a new Position using information from an enter FillEvent
 func (p *Position) Enter(fill FillEvent) error {
 	p.LastUpdateTraceId = fill.TraceId
 	p.LastUpdateTimestamp = fill.Timestamp
@@ -102,15 +107,41 @@ func (p *Position) Enter(fill FillEvent) error {
 	return nil
 }
 
-func (p *Position) Exit(fill FillEvent) {
+// Exit closes an existing Position with information from an exit FillEvent
+func (p *Position) Exit(fill FillEvent) error {
+	p.LastUpdateTraceId = fill.TraceId
+	p.LastUpdateTimestamp = fill.Timestamp
 
+	// Exit Fees
+	p.ExitFillFees["ExchangeFee"] = fill.ExchangeFee
+	p.ExitFillFees["SlippageFee"] = fill.SlippageFee
+	p.ExitFillFees["NetworkFee"] = fill.NetworkFee
+	p.ExitFillFees["TotalFees"] = fill.ExchangeFee + fill.SlippageFee + fill.NetworkFee
+
+	// Exit Price & Value
+	p.ExitAvgPriceGross = fill.FillValueGross / math.Abs(fill.Quantity)
+	p.ExitAvgPriceNet = p.ExitAvgPriceGross + (p.ExitFillFees["TotalFees"] / math.Abs(fill.Quantity))
+	p.ExitFillValueNet = math.Abs(fill.Quantity) * p.EnterAvgPriceNet
+
+	// Result Profit & Loss
+	resultProfitLoss, err := calculateProfitLoss(p.Direction, p.Quantity, p.ExitFillValueNet, p.EnterFillValueNet)
+	if err != nil {
+		return errors.Wrap(err, fmt.Sprintf("failed Position.Exit() for position: %+v", p))
+	}
+	p.ResultProfitLoss = resultProfitLoss
+
+	return nil
 }
 
-func calculateLongProfitLoss(exitFillValue float64, enterFillValue float64) float64 {
-	return exitFillValue - enterFillValue
+// calculateProfitLoss calculates the Unreal or Result Profit&Loss given the enter & exit context
+func calculateProfitLoss(direction string, quantity float64, exitFillValue float64, enterFillValue float64) (float64, error) {
+	var profitLoss float64
+	if direction == DirectionLong && quantity > 0 {
+		profitLoss = exitFillValue - enterFillValue
+	} else if direction == DirectionShort && quantity < 0 {
+		profitLoss = enterFillValue - exitFillValue
+	} else {
+		return profitLoss, errors.New("failed calculateProfitLoss due to ambiguous Direction & Quantity")
+	}
+	return profitLoss, nil
 }
-
-func calculateShortProfitLoss(exitFillValue float64, enterFillValue float64) float64 {
-	return enterFillValue - exitFillValue
-}
-
