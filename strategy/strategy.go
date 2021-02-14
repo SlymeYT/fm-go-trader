@@ -15,6 +15,7 @@ const (
 	DecisionCloseLong = "CLOSE_LONG"
 	DecisionShort = "SHORT"
 	DecisionCloseShort = "CLOSE_SHORT"
+	DecisionNothing = "NOTHING"
 )
 
 type Strategy interface {
