@@ -44,17 +44,27 @@ func (t *trader) Run() error {
 				switch e.(type) {
 				case model.MarketEvent:
 					t.log.Info(fmt.Sprintf("%+v", e.(model.MarketEvent)))
-					_ = t.strategy.GenerateSignal(e.(model.MarketEvent))
-					_ = t.portfolio.UpdateFromMarket(e.(model.MarketEvent))
+					if err := t.strategy.GenerateSignal(e.(model.MarketEvent)); err != nil {
+						return err
+					}
+					if err := t.portfolio.UpdateFromMarket(e.(model.MarketEvent)); err != nil {
+						return err
+					}
 				case model.SignalEvent:
 					t.log.Info(fmt.Sprintf("%+v", e.(model.SignalEvent)))
-					_ = t.portfolio.GenerateOrders(e.(model.SignalEvent))
+					if err := t.portfolio.GenerateOrders(e.(model.SignalEvent)); err != nil {
+						return err
+					}
 				case model.OrderEvent:
 					t.log.Info(fmt.Sprintf("%+v", e.(model.OrderEvent)))
-					_ = t.execution.GenerateFills(e.(model.OrderEvent))
+					if err := t.execution.GenerateFills(e.(model.OrderEvent)); err != nil {
+						return err
+					}
 				case model.FillEvent:
 					t.log.Info(fmt.Sprintf("%+v", e.(model.FillEvent)))
-					_ = t.portfolio.UpdateFromFill(e.(model.FillEvent))
+					if err := t.portfolio.UpdateFromFill(e.(model.FillEvent)); err != nil {
+						return err
+					}
 				}
 			} else {
 				// Inner loop would break when the event queue is empty and we need another data drop
@@ -74,11 +84,8 @@ func NewTrader(cfg config.Trader) (*trader, error) {
 	if err != nil {
 		return &trader{}, errors.Wrap(err, "failed to init dataHandler")
 	}
-
 	basicStrategy := strategy.NewSimpleRSIStrategy(cfg, eventQ, dataHandler)
-
 	basicPortfolio := portfolio.NewPortfolio(cfg, eventQ, dataHandler)
-
 	basicExecution := execution.NewSimulatedExecution(cfg, eventQ)
 
 	trader := &trader{
@@ -89,6 +96,5 @@ func NewTrader(cfg config.Trader) (*trader, error) {
 		portfolio: basicPortfolio,
 		execution: basicExecution,
 	}
-
 	return trader, nil
 }
