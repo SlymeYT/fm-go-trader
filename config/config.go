@@ -30,13 +30,13 @@ type Repository struct {
 // config.Engine is the engine service configuration
 type Engine struct {
 	// Tickers is the array of tickers the trading engine will use to create Traders
-	Symbols string			`envconfig:"TICKERS" required:"true"`
+	Symbols string				`envconfig:"TICKERS" required:"true"`
 	// Timeframes is the array of timeframe the trading engine will use to create Traders
-	Timeframes string		`envconfig:"TIMEFRAMES" required:"true"`
+	Timeframes string			`envconfig:"TIMEFRAMES" required:"true"`
 	// Exchanges is the array of exchanges the trading engine will use to create Traders
-	Exchanges string 		`envconfig:"EXCHANGES" required:"true"`
-	// StartingCash
-	StartingCash float64	`envconfig:"STARTING_CASH" required:"true"`
+	Exchanges string 			`envconfig:"EXCHANGES" required:"true"`
+	// StartingCash is the starting capital of the entire service
+	StartingCash float64		`envconfig:"STARTING_CASH" required:"true"`
 }
 
 // config.Server is the HTTP server configuration
@@ -61,6 +61,8 @@ type Trader struct {
 	Exchange string
 	// StartingCash is the starting capital allocated to this instance of Trader
 	StartingCash float64
+	// DefaultOrderValue is the default value used by the SizeManager to determine the quantity of an order
+	DefaultOrderValue float64
 }
 
 func GetConfig(log *zap.Logger) (*Config, error) {

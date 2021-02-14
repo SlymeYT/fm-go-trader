@@ -11,10 +11,10 @@ import (
 )
 
 const (
-	AdviseLong 			= "LONG"
-	AdviseCloseLong 	= "CLOSE_LONG"
-	AdviseShort 		= "SHORT"
-	AdviseCloseShort 	= "CLOSE_SHORT"
+	DecisionLong = "LONG"
+	DecisionCloseLong = "CLOSE_LONG"
+	DecisionShort = "SHORT"
+	DecisionCloseShort = "CLOSE_SHORT"
 )
 
 type Strategy interface {
@@ -45,16 +45,16 @@ func (s *rsiStrategy) GenerateSignal(market model.MarketEvent) error {
 	// Construct SignalPairs map
 	signalPairs := make(map[string]float32)
 	if rsi2Array[latestBarIndex] < 40 {
-		signalPairs[AdviseLong] = determineSignalStrength()
+		signalPairs[DecisionLong] = determineSignalStrength()
 	}
 	if rsi2Array[latestBarIndex] > 60 {
-		signalPairs[AdviseCloseLong] = determineSignalStrength()
+		signalPairs[DecisionCloseLong] = determineSignalStrength()
 	}
 	if rsi2Array[latestBarIndex] > 60 {
-		signalPairs[AdviseShort] = determineSignalStrength()
+		signalPairs[DecisionShort] = determineSignalStrength()
 	}
 	if rsi2Array[latestBarIndex] < 40 {
-		signalPairs[AdviseCloseShort] = determineSignalStrength()
+		signalPairs[DecisionCloseShort] = determineSignalStrength()
 	}
 
 	// If any SignalPairs

@@ -3,8 +3,10 @@ package portfolio
 import (
 	"github.com/pkg/errors"
 	"github.com/sheerun/queue"
+	"gitlab.com/open-source-keir/financial-modelling/trading/fm-trader/config"
 	"gitlab.com/open-source-keir/financial-modelling/trading/fm-trader/data"
 	"gitlab.com/open-source-keir/financial-modelling/trading/fm-trader/model"
+	"gitlab.com/open-source-keir/financial-modelling/trading/fm-trader/strategy"
 	"go.uber.org/zap"
 )
 
@@ -43,11 +45,25 @@ func (p *portfolio) UpdateFromMarket(market model.MarketEvent) error {
 	return nil
 }
 
-func (p *portfolio) GenerateOrders() error {
+func (p *portfolio) GenerateOrders(signal model.SignalEvent) error {
+	// Todo:
+	//  - Check if we are invested
+	//  - If not, check if we have any available cash
+	//  - Parse signal.signalPairs map to find decision to action & associated strength
+	//  - Pass to risk manager to refine or cancel order
+	//  - Pass to size manager to set order quantity / value
+	//  - Add order to orders book
+	//  - Append order to event queue
+
+	// SignalEvent is for a Symbol we are already invested in
+	_, isInvested := p.isInvested(signal.Symbol)
+
+
+
 	return nil
 }
 
-func (p *portfolio) UpdateFromFill() error {
+func (p *portfolio) UpdateFromFill(fill model.FillEvent) error {
 	return nil
 }
 
@@ -60,10 +76,29 @@ func (p *portfolio) isInvested(symbol string) (model.Position, bool) {
 	return position, false
 }
 
-func NewPortfolio() *portfolio {
-	return &portfolio{}
+func (p *portfolio) parseSignalDecisions(signalPairs map[string]float32) (strength float32, decision string) {
+	//strengthLong, adviseLong := signalPairs[strategy.DecisionLong]
+	//strengthCloseLong, adviseCloseLong := signalPairs[strategy.DecisionCloseLong]
+	//strengthShort, adviseShort := signalPairs[strategy.DecisionShort]
+	//strengthCloseShort, adviseCloseShort := signalPairs[strategy.DecisionCloseShort]
+
+	return
 }
 
-func parseAdvise(signalPairs map[string]float32) string {
-	return "LONG" // LONG, CLOSE_LONG, SHORT or CLOSE_SHORT
+func NewPortfolio(cfg config.Trader, eventQ *queue.Queue, data data.Handler) *portfolio {
+	return &portfolio{
+		log:              cfg.Log,
+		eventQ:           eventQ,
+		data:             data,
+		sizeManager:      &Size{DefaultOrderValue: cfg.DefaultOrderValue},
+		riskManager:      &Risk{DefaultOrderType: OrderTypeMarket},
+		symbol:           cfg.Symbol,
+		initialCash:      cfg.StartingCash,
+		currentCash:      cfg.StartingCash,
+		currentValue:     cfg.StartingCash,
+		orders:           []model.OrderEvent{},
+		fills:            []model.FillEvent{},
+		holdings:         make(map[string]model.Position),
+		historicHoldings: make(map[string][]model.Position),
+	}
 }

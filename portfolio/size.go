@@ -7,8 +7,7 @@ type SizeManager interface {
 }
 
 type Size struct {
-	DefaultSize 	float64
-	DefaultValue 	float64
+	DefaultOrderValue 	float64
 }
 
 func (s *Size) SizeOrder(order model.OrderEvent) (*model.OrderEvent, error) {
