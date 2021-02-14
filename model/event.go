@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
+	"gitlab.com/open-source-keir/financial-modelling/trading/fm-trader/strategy"
 	"time"
 )
 
@@ -31,6 +32,18 @@ type OrderEvent struct {
 	OrderType 	string  	// MARKET, LIMIT etc
 	Quantity   	float64		// +ve or -ve Quantity depending on Decision
 	Decision  	string		// LONG, CLOSE_LONG, SHORT or CLOSE_SHORT
+}
+
+func (o *OrderEvent) IsExit() bool {
+	return o.Decision == strategy.DecisionCloseLong || o.Decision == strategy.DecisionCloseShort
+}
+
+func (o *OrderEvent) IsLong() bool {
+	return o.Decision == strategy.DecisionLong
+}
+
+func (o *OrderEvent) IsShort() bool {
+	return o.Decision == strategy.DecisionShort
 }
 
 // FillEvent (execution) are journals of work done sent back to the portfolio to interpret and update holdings

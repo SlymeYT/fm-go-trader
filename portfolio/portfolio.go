@@ -1,13 +1,14 @@
 package portfolio
 
 import (
+	"fmt"
 	"github.com/pkg/errors"
 	"github.com/sheerun/queue"
 	"gitlab.com/open-source-keir/financial-modelling/trading/fm-trader/config"
 	"gitlab.com/open-source-keir/financial-modelling/trading/fm-trader/data"
 	"gitlab.com/open-source-keir/financial-modelling/trading/fm-trader/model"
-	"gitlab.com/open-source-keir/financial-modelling/trading/fm-trader/strategy"
 	"go.uber.org/zap"
+	"time"
 )
 
 type Portfolio interface {
@@ -46,19 +47,45 @@ func (p *portfolio) UpdateFromMarket(market model.MarketEvent) error {
 }
 
 func (p *portfolio) GenerateOrders(signal model.SignalEvent) error {
-	// Todo:
-	//  - Check if we are invested
-	//  - If not, check if we have any available cash
-	//  - Parse signal.signalPairs map to find decision to action & associated strength
-	//  - Pass to risk manager to refine or cancel order
-	//  - Pass to size manager to set order quantity / value
-	//  - Add order to orders book
-	//  - Append order to event queue
+	// Check if the SignalEvent is for a Symbol already invested in
+	position, isInvested := p.isInvested(signal.Symbol)
 
-	// SignalEvent is for a Symbol we are already invested in
-	_, isInvested := p.isInvested(signal.Symbol)
+	// If no cash, cannot open a new position -> exit without generating an order
+	if !isInvested && p.currentCash == 0.0 {
+		return nil
+	}
 
+	// Parse SignalPairs map to determine the net OrderEvent decision
+	strength, decision := p.parseSignalDecisions(signal.SignalPairs)
 
+	// Construct base OrderEvent
+	order := model.OrderEvent{
+		TraceId:   signal.TraceId,
+		Timestamp: time.Now().Truncate(time.Nanosecond),
+		Symbol:    signal.Symbol,
+		Decision:  decision,
+	}
+
+	// Size order
+	// Get current available data and the index of the latest bar
+	currentData, latestBarIndex := p.data.GetLatestData()
+
+	err := p.sizeManager.SizeOrder(&order, strength, position, currentData.Closes[latestBarIndex])
+	if err != nil {
+		return errors.Wrap(err, fmt.Sprintf("failed to size order: %+v", order))
+	}
+
+	// Manage risk - refine or cancel order
+	err = p.riskManager.EvaluateOrder(&order)
+	if err != nil {
+		return errors.Wrap(err, fmt.Sprintf("failed to risk evaluate order: %+v", order))
+	}
+
+	// Append order to the orders book
+	p.orders = append(p.orders, order)
+
+	// Append order to the event queue
+	p.eventQ.Append(order)
 
 	return nil
 }
@@ -68,6 +95,7 @@ func (p *portfolio) UpdateFromFill(fill model.FillEvent) error {
 }
 
 func (p *portfolio) isInvested(symbol string) (model.Position, bool) {
+	// Todo: Test this func asap rocky
 	position, isInHoldings := p.holdings[symbol]
 	// If present in current holdings & exit fill value is zero
 	if isInHoldings && position.ExitFillValueNet == 0 {

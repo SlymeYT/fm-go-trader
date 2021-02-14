@@ -7,7 +7,7 @@ const (
 )
 
 type RiskManager interface {
-	EvaluateOrder(model.OrderEvent) (*model.OrderEvent, error)
+	EvaluateOrder(*model.OrderEvent) error
 }
 
 type Risk struct {
@@ -15,7 +15,7 @@ type Risk struct {
 }
 
 // EvaluateOrder manages the risk of an order by refining it, or cancelling it
-func (r *Risk) EvaluateOrder(order model.OrderEvent) (*model.OrderEvent, error) {
+func (r *Risk) EvaluateOrder(order *model.OrderEvent) error {
 	order.OrderType = OrderTypeMarket
-	return &order, nil
+	return nil
 }
