@@ -1,9 +1,10 @@
 package trader
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/eapache/queue"
 	"github.com/pkg/errors"
-	"github.com/sheerun/queue"
 	"gitlab.com/open-source-keir/financial-modelling/trading/fm-trader/config"
 	"gitlab.com/open-source-keir/financial-modelling/trading/fm-trader/data"
 	"gitlab.com/open-source-keir/financial-modelling/trading/fm-trader/execution"
@@ -40,29 +41,39 @@ func (t *trader) Run() error {
 
 		for {
 			if t.eventQ.Length() > 0 {
-				e := t.eventQ.Pop()
+				e := t.eventQ.Get(0) // 0 or -1?
+				t.eventQ.Remove()
 				switch e.(type) {
 				case model.MarketEvent:
-					t.log.Info(fmt.Sprintf("%+v", e.(model.MarketEvent)))
-					if err := t.strategy.GenerateSignal(e.(model.MarketEvent)); err != nil {
-						return err
+					repr, _ := json.Marshal(e.(model.MarketEvent))
+					t.log.Info(fmt.Sprintf("MARKET: %s", string(repr)))
+					err := t.strategy.GenerateSignal(e.(model.MarketEvent))
+					if err != nil {
+						return errors.Wrap(err, "failed to GenerateSignal()")
 					}
-					if err := t.portfolio.UpdateFromMarket(e.(model.MarketEvent)); err != nil {
+					err = t.portfolio.UpdateFromMarket(e.(model.MarketEvent))
+					if err != nil {
 						return err
 					}
 				case model.SignalEvent:
-					t.log.Info(fmt.Sprintf("%+v", e.(model.SignalEvent)))
-					if err := t.portfolio.GenerateOrders(e.(model.SignalEvent)); err != nil {
+					repr, _ := json.Marshal(e.(model.SignalEvent))
+					t.log.Info(fmt.Sprintf("SIGNAL: %s", repr))
+					err := t.portfolio.GenerateOrders(e.(model.SignalEvent))
+					if err != nil {
 						return err
 					}
 				case model.OrderEvent:
-					t.log.Info(fmt.Sprintf("%+v", e.(model.OrderEvent)))
-					if err := t.execution.GenerateFills(e.(model.OrderEvent)); err != nil {
+					repr, _ := json.Marshal(e.(model.OrderEvent))
+					t.log.Info(fmt.Sprintf("ORDER: %s", repr))
+					err := t.execution.GenerateFills(e.(model.OrderEvent))
+					if err != nil {
 						return err
 					}
 				case model.FillEvent:
-					t.log.Info(fmt.Sprintf("%+v", e.(model.FillEvent)))
-					if err := t.portfolio.UpdateFromFill(e.(model.FillEvent)); err != nil {
+					repr, _ := json.Marshal(e.(model.FillEvent))
+					t.log.Info(fmt.Sprintf("FILL: %s", repr))
+					err := t.portfolio.UpdateFromFill(e.(model.FillEvent))
+					if err != nil {
 						return err
 					}
 				}
@@ -78,6 +89,7 @@ func (t *trader) Run() error {
 }
 
 func NewTrader(cfg config.Trader) (*trader, error) {
+
 	eventQ := queue.New()
 
 	dataHandler, err := data.NewHistoricHandler(cfg, eventQ)

@@ -1,21 +1,13 @@
 package strategy
 
 import (
+	"github.com/eapache/queue"
 	"github.com/markcheno/go-talib"
-	"github.com/sheerun/queue"
 	"gitlab.com/open-source-keir/financial-modelling/trading/fm-trader/config"
 	"gitlab.com/open-source-keir/financial-modelling/trading/fm-trader/data"
 	"gitlab.com/open-source-keir/financial-modelling/trading/fm-trader/model"
 	"go.uber.org/zap"
 	"time"
-)
-
-const (
-	DecisionLong = "LONG"
-	DecisionCloseLong = "CLOSE_LONG"
-	DecisionShort = "SHORT"
-	DecisionCloseShort = "CLOSE_SHORT"
-	DecisionNothing = "NOTHING"
 )
 
 type Strategy interface {
@@ -46,22 +38,22 @@ func (s *rsiStrategy) GenerateSignal(market model.MarketEvent) error {
 	// Construct SignalPairs map
 	signalPairs := make(map[string]float32)
 	if rsi2Array[latestBarIndex] < 40 {
-		signalPairs[DecisionLong] = determineSignalStrength()
+		signalPairs[model.DecisionLong] = determineSignalStrength()
 	}
 	if rsi2Array[latestBarIndex] > 60 {
-		signalPairs[DecisionCloseLong] = determineSignalStrength()
+		signalPairs[model.DecisionCloseLong] = determineSignalStrength()
 	}
 	if rsi2Array[latestBarIndex] > 60 {
-		signalPairs[DecisionShort] = determineSignalStrength()
+		signalPairs[model.DecisionShort] = determineSignalStrength()
 	}
 	if rsi2Array[latestBarIndex] < 40 {
-		signalPairs[DecisionCloseShort] = determineSignalStrength()
+		signalPairs[model.DecisionCloseShort] = determineSignalStrength()
 	}
 
 	// If any SignalPairs
 	if len(signalPairs) != 0 {
 		// Append SignalEvent to the queue
-		s.eventQ.Append(model.SignalEvent{
+		s.eventQ.Add(model.SignalEvent{
 			TraceId: 	 market.TraceId,
 			Timestamp:   time.Now().Truncate(time.Nanosecond),
 			Symbol:      s.symbol,
