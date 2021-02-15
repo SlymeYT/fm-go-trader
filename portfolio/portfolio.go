@@ -17,6 +17,9 @@ type Portfolio interface {
 	UpdateFromMarket(event model.MarketEvent) error
 	GenerateOrders(model.SignalEvent) error
 	UpdateFromFill(model.FillEvent) error
+
+	// Todo: For dev only!
+	GetPortfolio() (float64, float64, float64, map[string][]model.Position)
 }
 
 type portfolio struct {
@@ -188,11 +191,15 @@ func (p *portfolio) UpdateFromFill(fill model.FillEvent) error {
 	positionsJson, _ := json.Marshal(p.positions)
 	p.log.Info(fmt.Sprintf("UPDATE-FROM-FILL{\"Value\": %v, \"Cash\": %v, \"Positions\": %s}", p.currentValue, p.currentCash, string(positionsJson)))
 
-	positionsOldJson, _ := json.Marshal(p.historicPositions)
-	p.log.Info(fmt.Sprintf("HISTORIC POSITIONS AFTER FILL %s", string(positionsOldJson)))
+	//positionsOldJson, _ := json.Marshal(p.historicPositions)
+	//p.log.Info(fmt.Sprintf("HISTORIC POSITIONS AFTER FILL %s", string(positionsOldJson)))
 
 
 	return nil
+}
+
+func (p *portfolio) GetPortfolio() (float64, float64, float64, map[string][]model.Position) {
+	return p.initialCash, p.currentCash, p.currentValue, p.historicPositions
 }
 
 func NewPortfolio(cfg config.Trader, eventQ *queue.Queue, data data.Handler) *portfolio {

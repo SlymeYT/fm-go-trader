@@ -16,6 +16,7 @@ import (
 
 type Trader interface {
 	Run() error
+	DisplayResults() error
 }
 
 type trader struct {
@@ -34,6 +35,7 @@ func (t *trader) Run() error {
 			t.data.UpdateData()
 		} else {
 			t.log.Info("Backtest has finished.")
+			_ = t.DisplayResults()
 			// Save & Print results
 			// Reset trader instance ready for another run
 			break
@@ -85,6 +87,23 @@ func (t *trader) Run() error {
 		// This is the heartbeat -> would be frequency of poll to get data from execution
 		//time.Sleep(2*time.Millisecond)
 	}
+	return nil
+}
+
+func (t *trader) DisplayResults() error {
+	initialCash, currentCash, currentValue, positions := t.portfolio.GetPortfolio()
+
+	fmt.Printf("\nDisplay Results:\n")
+	fmt.Printf("Starting Cash: %v\n", initialCash)
+	fmt.Printf("Ending Cash: %v\n", currentCash)
+	fmt.Printf("Ending Value: %v\n", currentValue)
+	fmt.Printf("Number Trades: %v\n", len(positions["ETH-USD"]))
+
+	totalProfit := currentValue - initialCash
+	fmt.Printf("Total Profit: %v\n", totalProfit)
+	percentProfit := (totalProfit / initialCash) * 100
+	fmt.Printf("Total Percent Profit: %v\n", percentProfit)
+
 	return nil
 }
 
