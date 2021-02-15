@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	"gitlab.com/open-source-keir/financial-modelling/trading/fm-trader/config"
+	"gitlab.com/open-source-keir/financial-modelling/trading/fm-trader/service"
 	"go.uber.org/zap"
 )
 
@@ -25,7 +26,10 @@ func run() error {
 		log.Fatal(fmt.Sprintf("failed to init environment config: %s", err))
 	}
 
-	fmt.Printf("%+v", cfg)
+	traderService, err := service.NewTradingEngine(&cfg.Engine, log)
+	if err != nil {
+		log.Fatal(fmt.Sprintf("failed to init trading engine: %s", err))
+	}
 
-	return nil
+	return traderService.RunBacktest()
 }

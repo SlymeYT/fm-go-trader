@@ -4,8 +4,15 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
-	"gitlab.com/open-source-keir/financial-modelling/trading/fm-trader/strategy"
 	"time"
+)
+
+const (
+	DecisionLong = "LONG"
+	DecisionCloseLong = "CLOSE_LONG"
+	DecisionShort = "SHORT"
+	DecisionCloseShort = "CLOSE_SHORT"
+	DecisionNothing = "NOTHING"
 )
 
 // MarketEvent (data) is the system heartbeat & represents the arrival of new data for the strategy to interpret
@@ -35,15 +42,15 @@ type OrderEvent struct {
 }
 
 func (o *OrderEvent) IsExit() bool {
-	return o.Decision == strategy.DecisionCloseLong || o.Decision == strategy.DecisionCloseShort
+	return o.Decision == DecisionCloseLong || o.Decision == DecisionCloseShort
 }
 
 func (o *OrderEvent) IsLong() bool {
-	return o.Decision == strategy.DecisionLong
+	return o.Decision == DecisionLong
 }
 
 func (o *OrderEvent) IsShort() bool {
-	return o.Decision == strategy.DecisionShort
+	return o.Decision == DecisionShort
 }
 
 // FillEvent (execution) are journals of work done sent back to the portfolio to interpret and update holdings

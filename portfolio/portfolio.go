@@ -1,13 +1,13 @@
 package portfolio
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/eapache/queue"
 	"github.com/pkg/errors"
-	"github.com/sheerun/queue"
 	"gitlab.com/open-source-keir/financial-modelling/trading/fm-trader/config"
 	"gitlab.com/open-source-keir/financial-modelling/trading/fm-trader/data"
 	"gitlab.com/open-source-keir/financial-modelling/trading/fm-trader/model"
-	"gitlab.com/open-source-keir/financial-modelling/trading/fm-trader/strategy"
 	"go.uber.org/zap"
 	"math"
 	"time"
@@ -17,6 +17,9 @@ type Portfolio interface {
 	UpdateFromMarket(event model.MarketEvent) error
 	GenerateOrders(model.SignalEvent) error
 	UpdateFromFill(model.FillEvent) error
+
+	// Todo: For dev only!
+	GetPortfolio() (float64, float64, float64, map[string][]model.Position)
 }
 
 type portfolio struct {
@@ -46,6 +49,9 @@ func (p *portfolio) UpdateFromMarket(market model.MarketEvent) error {
 		p.positions[p.symbol] = position
 	}
 
+	// Update currentValue
+	p.currentValue = p.currentCash + p.positions[p.symbol].CurrentMarketValue
+
 	return nil
 }
 
@@ -74,6 +80,9 @@ func (p *portfolio) GenerateOrders(signal model.SignalEvent) error {
 
 	// Parse SignalPairs map to determine the net OrderEvent decision
 	strength, decision := p.parseSignalDecisions(position, isInvested, signal.SignalPairs)
+	if decision == model.DecisionNothing {
+		return nil
+	}
 
 	// Construct base OrderEvent
 	order := model.OrderEvent{
@@ -102,7 +111,7 @@ func (p *portfolio) GenerateOrders(signal model.SignalEvent) error {
 	p.orders = append(p.orders, order)
 
 	// Append order to the event queue
-	p.eventQ.Append(order)
+	p.eventQ.Add(order)
 
 	return nil
 }
@@ -112,32 +121,32 @@ func (p *portfolio) parseSignalDecisions(position model.Position, isInvested boo
 	// Todo: Test this func asap rocky
 
 	// Pull (strength, decisionAdvise) out of signalPairs map
-	strengthLong, long := signalPairs[strategy.DecisionLong]
-	strengthCloseLong, closeLong := signalPairs[strategy.DecisionCloseLong]
-	strengthShort, short := signalPairs[strategy.DecisionShort]
-	strengthCloseShort, closeShort := signalPairs[strategy.DecisionCloseShort]
+	strengthLong, long := signalPairs[model.DecisionLong]
+	strengthCloseLong, closeLong := signalPairs[model.DecisionCloseLong]
+	strengthShort, short := signalPairs[model.DecisionShort]
+	strengthCloseShort, closeShort := signalPairs[model.DecisionCloseShort]
 
 	if isInvested && position.Direction == "LONG" {
 		if closeLong {
-			return strengthCloseLong, strategy.DecisionCloseLong
+			return strengthCloseLong, model.DecisionCloseLong
 		}
 	}
 
 	if isInvested && position.Direction == "SHORT" {
 		if closeShort {
-			return strengthCloseShort, strategy.DecisionCloseShort
+			return strengthCloseShort, model.DecisionCloseShort
 		}
 	}
 
 	if !isInvested {
 		if long {
-			return strengthLong, strategy.DecisionLong
+			return strengthLong, model.DecisionLong
 		} else if short {
-			return strengthShort, strategy.DecisionShort
+			return strengthShort, model.DecisionShort
 		}
 	}
 
-	return 0.0, strategy.DecisionNothing
+	return 0.0, model.DecisionNothing
 }
 
 // UpdateFromFill updates the portfolio's current positions & historicPositions from a FillEvent
@@ -158,8 +167,8 @@ func (p *portfolio) UpdateFromFill(fill model.FillEvent) error {
 		p.historicPositions[fill.Symbol] = append(p.historicPositions[fill.Symbol], position)
 		delete(p.positions, fill.Symbol)
 
-		// Update cash & value on exit
-		p.currentCash = p.currentCash + fill.FillValueGross
+		// Update portfolio cash & value on exit
+		p.currentCash = p.currentCash + position.EnterFillValueNet + position.ResultProfitLoss
 		p.currentValue = p.currentCash
 
 	} else {
@@ -169,24 +178,34 @@ func (p *portfolio) UpdateFromFill(fill model.FillEvent) error {
 		if err != nil {
 			return errors.Wrap(err, "failed portfolio.UpdateFromFill()")
 		}
+		p.positions[fill.Symbol] = position
 
 		// Update cash & value on entry
-		p.currentCash = p.currentCash - fill.FillValueGross
-		p.currentValue = p.currentCash + fill.FillValueGross
+		p.currentCash = p.currentCash - position.EnterFillValueNet
+		p.currentValue = p.currentCash + position.EnterFillValueNet
 	}
 
 	// Update completed FillEvents
 	p.fills = append(p.fills, fill)
 
-	p.log.Info(fmt.Sprintf("Value: %v, Cash: %v, Holdings: %+v", p.currentValue, p.currentCash, p.positions))
+	positionsJson, _ := json.Marshal(p.positions)
+	p.log.Info(fmt.Sprintf("UPDATE-FROM-FILL{\"Value\": %v, \"Cash\": %v, \"Positions\": %s}", p.currentValue, p.currentCash, string(positionsJson)))
+
+	//positionsOldJson, _ := json.Marshal(p.historicPositions)
+	//p.log.Info(fmt.Sprintf("HISTORIC POSITIONS AFTER FILL %s", string(positionsOldJson)))
+
 
 	return nil
 }
 
+func (p *portfolio) GetPortfolio() (float64, float64, float64, map[string][]model.Position) {
+	return p.initialCash, p.currentCash, p.currentValue, p.historicPositions
+}
+
 func NewPortfolio(cfg config.Trader, eventQ *queue.Queue, data data.Handler) *portfolio {
 	return &portfolio{
-		log:              cfg.Log,
-		eventQ:           eventQ,
+		log:               cfg.Log,
+		eventQ:            eventQ,
 		data:              data,
 		sizeManager:       &Size{DefaultOrderValue: cfg.DefaultOrderValue},
 		riskManager:       &Risk{DefaultOrderType: OrderTypeMarket},

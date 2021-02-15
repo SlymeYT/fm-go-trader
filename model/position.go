@@ -81,7 +81,7 @@ func (p *Position) Enter(fill FillEvent) error {
 
 	// Enter Price & Value
 	p.EnterAvgPriceGross = fill.FillValueGross / math.Abs(fill.Quantity)
-	p.EnterAvgPriceNet = p.EnterAvgPriceGross + (p.EnterFillFees["TotalFees"] / math.Abs(fill.Quantity))
+	p.EnterAvgPriceNet = p.EnterAvgPriceGross + (p.EnterFillFees["TotalFees"] / math.Abs(fill.Quantity)) // When Enter fees make it cost more
 	p.EnterFillValueNet = math.Abs(fill.Quantity) * p.EnterAvgPriceNet
 
 	// Exit Fees
@@ -119,18 +119,41 @@ func (p *Position) Exit(fill FillEvent) error {
 	p.ExitFillFees["TotalFees"] = fill.ExchangeFee + fill.SlippageFee + fill.NetworkFee
 
 	// Exit Price & Value
+	// Todo: Is this fees calculation on ExitAvgPriceNet correct? Does it feed into profitLoss calc correctly for short and long?
 	p.ExitAvgPriceGross = fill.FillValueGross / math.Abs(fill.Quantity)
-	p.ExitAvgPriceNet = p.ExitAvgPriceGross + (p.ExitFillFees["TotalFees"] / math.Abs(fill.Quantity))
-	p.ExitFillValueNet = math.Abs(fill.Quantity) * p.EnterAvgPriceNet
+	p.ExitAvgPriceNet = p.ExitAvgPriceGross - (p.ExitFillFees["TotalFees"] / math.Abs(fill.Quantity)) // When Exit fees make it less valuable
+	p.ExitFillValueNet = math.Abs(fill.Quantity) * p.ExitAvgPriceNet
 
 	// Result Profit & Loss
-	resultProfitLoss, err := calculateProfitLoss(p.Direction, p.Quantity, p.ExitFillValueNet, p.EnterFillValueNet)
+	//resultProfitLoss, err := calculateProfitLoss(p.Direction, p.Quantity, p.ExitFillValueNet, p.EnterFillValueNet)
+	resultProfitLoss, err := calculateProfitLossV2(*p)
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("failed Position.Exit() for position: %+v", p))
 	}
 	p.ResultProfitLoss = resultProfitLoss
 
 	return nil
+}
+
+// Todo: https://help.bybit.com/hc/en-us/articles/900000630066-P-L-calculations-USDT-Contract-
+func calculateProfitLossV2(position Position) (float64, error) {
+	var profitLoss float64
+
+	if position.Direction == DirectionLong && position.Quantity > 0 {
+
+		profitLoss = (position.ExitAvgPriceNet * math.Abs(position.Quantity)) + position.EnterFillValueNet
+
+	} else if position.Direction == DirectionShort && position.Quantity < 0 {
+
+
+		profitLoss = position.EnterFillValueNet - (position.ExitAvgPriceNet * math.Abs(position.Quantity))
+
+	} else {
+		return profitLoss, errors.New("failed calculateProfitLoss due to ambiguous Direction & Quantity")
+	}
+
+	return profitLoss, nil
+
 }
 
 // calculateProfitLoss calculates the Unreal or Result Profit&Loss given the enter & exit context
