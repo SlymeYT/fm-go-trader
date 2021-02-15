@@ -46,6 +46,9 @@ func (p *portfolio) UpdateFromMarket(market model.MarketEvent) error {
 		p.positions[p.symbol] = position
 	}
 
+	// Update currentValue
+	p.currentValue = p.currentCash + p.positions[p.symbol].CurrentMarketValue
+
 	return nil
 }
 
@@ -161,8 +164,8 @@ func (p *portfolio) UpdateFromFill(fill model.FillEvent) error {
 		p.historicPositions[fill.Symbol] = append(p.historicPositions[fill.Symbol], position)
 		delete(p.positions, fill.Symbol)
 
-		// Update cash & value on exit
-		p.currentCash = p.currentCash + fill.FillValueGross
+		// Update portfolio cash & value on exit
+		p.currentCash = p.currentCash + position.EnterFillValueNet + position.ResultProfitLoss
 		p.currentValue = p.currentCash
 
 	} else {
@@ -175,8 +178,8 @@ func (p *portfolio) UpdateFromFill(fill model.FillEvent) error {
 		p.positions[fill.Symbol] = position
 
 		// Update cash & value on entry
-		p.currentCash = p.currentCash - fill.FillValueGross
-		p.currentValue = p.currentCash + fill.FillValueGross
+		p.currentCash = p.currentCash - position.EnterFillValueNet
+		p.currentValue = p.currentCash + position.EnterFillValueNet
 	}
 
 	// Update completed FillEvents
@@ -184,6 +187,10 @@ func (p *portfolio) UpdateFromFill(fill model.FillEvent) error {
 
 	positionsJson, _ := json.Marshal(p.positions)
 	p.log.Info(fmt.Sprintf("UPDATE-FROM-FILL{\"Value\": %v, \"Cash\": %v, \"Positions\": %s}", p.currentValue, p.currentCash, string(positionsJson)))
+
+	positionsOldJson, _ := json.Marshal(p.historicPositions)
+	p.log.Info(fmt.Sprintf("HISTORIC POSITIONS AFTER FILL %s", string(positionsOldJson)))
+
 
 	return nil
 }
