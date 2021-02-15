@@ -3,9 +3,9 @@ package data
 import (
 	"encoding/csv"
 	"fmt"
+	"github.com/eapache/queue"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
-	"github.com/sheerun/queue"
 	"gitlab.com/open-source-keir/financial-modelling/trading/fm-trader/config"
 	"gitlab.com/open-source-keir/financial-modelling/trading/fm-trader/model"
 	"go.uber.org/zap"
@@ -61,7 +61,7 @@ func (sh *historicHandler) UpdateData() {
 	sh.currentSymbolData.AddBar(latestBar)
 
 	// Add MarketEvent to the queue
-	sh.eventQ.Append(model.MarketEvent{
+	sh.eventQ.Add(model.MarketEvent{
 		TraceId: uuid.New(),
 		Timestamp: latestBar.Timestamp,
 		Symbol: sh.symbol,

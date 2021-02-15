@@ -1,7 +1,7 @@
 package execution
 
 import (
-	"github.com/sheerun/queue"
+	"github.com/eapache/queue"
 	"gitlab.com/open-source-keir/financial-modelling/trading/fm-trader/config"
 	"gitlab.com/open-source-keir/financial-modelling/trading/fm-trader/model"
 	"go.uber.org/zap"
@@ -36,7 +36,7 @@ func (se *simulatedExecution) GenerateFills(order model.OrderEvent) error {
 	fill.NetworkFee = fill.CalculateNetworkFee()		 // 0.0
 	fill.FillValueGross = fill.CalculateFillValueGross() // 0.0
 
-	se.eventQ.Append(fill)
+	se.eventQ.Add(fill)
 	return nil
 }
 
