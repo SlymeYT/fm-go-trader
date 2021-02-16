@@ -37,25 +37,6 @@ type Position struct {
 	ResultProfitLoss		float64 			// realised P&L after Position closed
 }
 
-// Update updates the Position instance on every MarketEvent
-func (p *Position) Update(market MarketEvent) error {
-	p.LastUpdateTraceId = market.TraceId
-	p.LastUpdateTimestamp = market.Timestamp
-
-	p.CurrentSymbolPrice = market.Close
-	p.CurrentMarketValue = market.Close * math.Abs(p.Quantity)
-
-	// Unreal Profit & Loss
-	unrealExitFillValue := p.CurrentMarketValue - p.EnterFillFees["TotalFees"]  // Approximate exit fees with enter fees
-	unrealProfitLoss, err := calculateProfitLoss(p.Direction, p.Quantity, unrealExitFillValue, p.EnterFillValueNet)
-	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("failed Position.Update() for Position: %+v", p))
-	}
-	p.UnrealProfitLoss = unrealProfitLoss
-
-	return nil
-}
-
 // Enter enriches a new Position using information from an enter FillEvent
 func (p *Position) Enter(fill FillEvent) error {
 	p.LastUpdateTraceId = fill.TraceId
@@ -103,6 +84,25 @@ func (p *Position) Enter(fill FillEvent) error {
 	// Profit & Loss
 	p.UnrealProfitLoss = 0.0
 	p.ResultProfitLoss = 0.0
+
+	return nil
+}
+
+// Update updates the Position instance on every MarketEvent
+func (p *Position) Update(market MarketEvent) error {
+	p.LastUpdateTraceId = market.TraceId
+	p.LastUpdateTimestamp = market.Timestamp
+
+	p.CurrentSymbolPrice = market.Close
+	p.CurrentMarketValue = market.Close * math.Abs(p.Quantity)
+
+	// Unreal Profit & Loss
+	unrealExitFillValue := p.CurrentMarketValue - p.EnterFillFees["TotalFees"]  // Approximate exit fees with enter fees
+	unrealProfitLoss, err := calculateProfitLoss(p.Direction, p.Quantity, unrealExitFillValue, p.EnterFillValueNet)
+	if err != nil {
+		return errors.Wrap(err, fmt.Sprintf("failed Position.Update() for Position: %+v", p))
+	}
+	p.UnrealProfitLoss = unrealProfitLoss
 
 	return nil
 }
