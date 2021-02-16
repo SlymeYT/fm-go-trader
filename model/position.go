@@ -22,12 +22,10 @@ type Position struct {
 
 	EnterFillFees			map[string]float64 	// map[feeType]feeAmount
 	EnterAvgPriceGross		float64				// Enter AvgPrice excluding EnterFillFees["totalFees"]
-	//EnterAvgPriceNet		float64				// Enter AvgPrice including EnterFillFees["totalFees"]
 	EnterFillValueGross		float64				// abs(Quantity) * EnterAvgPriceGross
 
 	ExitFillFees 			map[string]float64	// map[feeType]feeAmount
 	ExitAvgPriceGross		float64				// Exit AvgPrice excluding ExitFillFees["totalFees"]
-	//ExitAvgPriceNet			float64				// Exit AvgPrice including ExitFillFees["totalFees"]
 	ExitFillValueGross		float64				// abs(Quantity) * ExitAvgPriceGross
 
 	CurrentSymbolPrice 		float64				// Symbol current close price
@@ -62,7 +60,6 @@ func (p *Position) Enter(fill FillEvent) error {
 
 	// Enter Price & Value
 	p.EnterAvgPriceGross = fill.FillValueGross / math.Abs(fill.Quantity)
-	//p.EnterAvgPriceNet = p.EnterAvgPriceGross + (p.EnterFillFees["TotalFees"] / math.Abs(fill.Quantity)) // When Enter fees make it cost more
 	p.EnterFillValueGross = math.Abs(fill.Quantity) * p.EnterAvgPriceGross
 
 	// Exit Fees
@@ -119,7 +116,6 @@ func (p *Position) Exit(fill FillEvent) error {
 
 	// Exit Price & Value
 	p.ExitAvgPriceGross = fill.FillValueGross / math.Abs(fill.Quantity)
-	//p.ExitAvgPriceNet = p.ExitAvgPriceGross - (p.ExitFillFees["TotalFees"] / math.Abs(fill.Quantity)) // When Exit fees make it less valuable
 	p.ExitFillValueGross = math.Abs(fill.Quantity) * p.ExitAvgPriceGross
 
 	// Result Profit & Loss
