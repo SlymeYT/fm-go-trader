@@ -13,10 +13,15 @@ const (
 	DecisionShort = "SHORT"
 	DecisionCloseShort = "CLOSE_SHORT"
 	DecisionNothing = "NOTHING"
+	EventMarket = "MarketEvent"
+	EventSignal = "SignalEvent"
+	EventOrder = "OrderEvent"
+	EventFill = "FillEvent"
 )
 
 // MarketEvent (data) is the system heartbeat & represents the arrival of new data for the strategy to interpret
 type MarketEvent struct {
+	EventType 	string
 	TraceId 	uuid.UUID
 	Timestamp 	time.Time
 	Symbol		string
@@ -25,6 +30,7 @@ type MarketEvent struct {
 
 // SignalEvent (strategy) are advisory signals for the portfolio to interpret
 type SignalEvent struct {
+	EventType 	string
 	TraceId 	uuid.UUID
 	Timestamp 	time.Time
 	Symbol 		string
@@ -33,6 +39,7 @@ type SignalEvent struct {
 
 // OrderEvent (portfolio) are actions for the execution handler to execute
 type OrderEvent struct {
+	EventType 	string
 	TraceId 	uuid.UUID
 	Timestamp 	time.Time
 	Symbol    	string
@@ -56,6 +63,7 @@ func (o *OrderEvent) IsShort() bool {
 
 // FillEvent (execution) are journals of work done sent back to the portfolio to interpret and update holdings
 type FillEvent struct {
+	EventType 		string
 	TraceId 		uuid.UUID
 	Timestamp  		time.Time
 	Symbol     		string

@@ -54,6 +54,7 @@ func (s *rsiStrategy) GenerateSignal(market model.MarketEvent) error {
 	if len(signalPairs) != 0 {
 		// Append SignalEvent to the queue
 		s.eventQ.Add(model.SignalEvent{
+			EventType: model.EventSignal,
 			TraceId: 	 market.TraceId,
 			Timestamp:   time.Now().Truncate(time.Nanosecond),
 			Symbol:      s.symbol,

@@ -62,6 +62,7 @@ func (sh *historicHandler) UpdateData() {
 
 	// Add MarketEvent to the queue
 	sh.eventQ.Add(model.MarketEvent{
+		EventType: model.EventMarket,
 		TraceId: uuid.New(),
 		Timestamp: latestBar.Timestamp,
 		Symbol: sh.symbol,

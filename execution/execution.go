@@ -25,6 +25,7 @@ func (se *simulatedExecution) GenerateFills(order model.OrderEvent) error {
 
 	// Assume all orders are filled at the market price
 	fill := model.FillEvent{
+		EventType: model.EventFill,
 		TraceId: order.TraceId,
 		Timestamp: time.Now().Truncate(time.Nanosecond),
 		Symbol:    order.Symbol,

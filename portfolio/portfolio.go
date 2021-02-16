@@ -88,6 +88,7 @@ func (p *portfolio) GenerateOrders(signal model.SignalEvent) error {
 
 	// Construct base OrderEvent
 	order := model.OrderEvent{
+		EventType: model.EventOrder,
 		TraceId:   signal.TraceId,
 		Timestamp: time.Now().Truncate(time.Nanosecond),
 		Symbol:    signal.Symbol,

@@ -12,6 +12,12 @@ import (
 	"gitlab.com/open-source-keir/financial-modelling/trading/fm-trader/portfolio"
 	"gitlab.com/open-source-keir/financial-modelling/trading/fm-trader/strategy"
 	"go.uber.org/zap"
+	"os"
+	"time"
+)
+
+const (
+	resultDirectory = "data/result/"
 )
 
 type Trader interface {
@@ -29,6 +35,12 @@ type trader struct {
 }
 
 func (t *trader) Run() error {
+	// Setup Market Event Stream File
+	encoder, encoderClean, err := setupEventLog("ETH-USD")
+	if err != nil {
+		return err
+	}
+
 	for {
 		// Todo: Need to add check for stop loss and take profit - probably in strategy
 		if t.data.ShouldContinue() {
@@ -36,6 +48,10 @@ func (t *trader) Run() error {
 		} else {
 			t.log.Info("Backtest has finished.")
 			_ = t.DisplayResults()
+			err := encoderClean()
+			if err != nil {
+				return err
+			}
 			// Save & Print results
 			// Reset trader instance ready for another run
 			break
@@ -43,41 +59,38 @@ func (t *trader) Run() error {
 
 		for {
 			if t.eventQ.Length() > 0 {
-				e := t.eventQ.Get(0) // 0 or -1?
+				e := t.eventQ.Get(0)
 				t.eventQ.Remove()
+
 				switch e.(type) {
 				case model.MarketEvent:
-					repr, _ := json.Marshal(e.(model.MarketEvent))
-					t.log.Info(fmt.Sprintf("MARKET: %s", string(repr)))
 					err := t.strategy.GenerateSignal(e.(model.MarketEvent))
 					if err != nil {
 						return errors.Wrap(err, "failed to GenerateSignal()")
 					}
 					err = t.portfolio.UpdateFromMarket(e.(model.MarketEvent))
 					if err != nil {
-						return err
+						return errors.Wrap(err, "failed to UpdateFromMarket()")
 					}
+					_ = encoder.Encode(e.(model.MarketEvent))
 				case model.SignalEvent:
-					repr, _ := json.Marshal(e.(model.SignalEvent))
-					t.log.Info(fmt.Sprintf("SIGNAL: %s", repr))
 					err := t.portfolio.GenerateOrders(e.(model.SignalEvent))
 					if err != nil {
-						return err
+						return errors.Wrap(err, "failed to GenerateOrders()")
 					}
+					_ = encoder.Encode(e.(model.SignalEvent))
 				case model.OrderEvent:
-					repr, _ := json.Marshal(e.(model.OrderEvent))
-					t.log.Info(fmt.Sprintf("ORDER: %s", repr))
 					err := t.execution.GenerateFills(e.(model.OrderEvent))
 					if err != nil {
-						return err
+						return errors.Wrap(err, "failed to GenerateFills()")
 					}
+					_ = encoder.Encode(e.(model.OrderEvent))
 				case model.FillEvent:
-					repr, _ := json.Marshal(e.(model.FillEvent))
-					t.log.Info(fmt.Sprintf("FILL: %s", repr))
 					err := t.portfolio.UpdateFromFill(e.(model.FillEvent))
 					if err != nil {
-						return err
+						return errors.Wrap(err, "failed to UpdateFromFill()")
 					}
+					_ = encoder.Encode(e.(model.FillEvent))
 				}
 			} else {
 				// Inner loop would break when the event queue is empty and we need another data drop
@@ -88,6 +101,25 @@ func (t *trader) Run() error {
 		//time.Sleep(2*time.Millisecond)
 	}
 	return nil
+}
+
+func setupEventLog(symbol string) (*json.Encoder, func() (err error), error) {
+	// Create *File (io.Writer)
+	fileName := fmt.Sprintf("%seventLog_%s_%v", resultDirectory, symbol, time.Now().Truncate(time.Millisecond))
+	file, err := os.Create(fileName)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Create Json Encoder w/ *File
+	encoder := json.NewEncoder(file)
+
+	// Create cleanup func
+	eventLogClose := func() (err error) {
+		return file.Close()
+	}
+
+	return encoder, eventLogClose, nil
 }
 
 func (t *trader) DisplayResults() error {
