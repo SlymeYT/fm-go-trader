@@ -60,7 +60,7 @@ func (p *portfolio) isInvested(symbol string) (model.Position, bool) {
 	// Todo: Test this func asap rocky
 	position, isInPositions := p.positions[symbol]
 	// If present in current positions & exit fill value is zero
-	if isInPositions && position.ExitFillValueNet == 0 {
+	if isInPositions && position.ExitFillValueGross == 0 {
 		return position, true
 	}
 	return position, false
@@ -161,14 +161,14 @@ func (p *portfolio) UpdateFromFill(fill model.FillEvent) error {
 		// Exit position instance
 		err := position.Exit(fill)
 		if err != nil {
-			return errors.Wrap(err, "failed portfolio.UpdateFromFill()")
+			return errors.Wrap(err, "failed exit portfolio.UpdateFromFill()")
 		}
 		// Append exited position to historicPositions and remove from current positions
 		p.historicPositions[fill.Symbol] = append(p.historicPositions[fill.Symbol], position)
 		delete(p.positions, fill.Symbol)
 
 		// Update portfolio cash & value on exit
-		p.currentCash = p.currentCash + position.EnterFillValueNet + position.ResultProfitLoss
+		p.currentCash = p.currentCash + position.EnterFillValueGross + position.ResultProfitLoss // Todo: Double check this
 		p.currentValue = p.currentCash
 
 	} else {
@@ -176,13 +176,13 @@ func (p *portfolio) UpdateFromFill(fill model.FillEvent) error {
 		position := model.Position{}
 		err := position.Enter(fill)
 		if err != nil {
-			return errors.Wrap(err, "failed portfolio.UpdateFromFill()")
+			return errors.Wrap(err, "failed entry portfolio.UpdateFromFill()")
 		}
 		p.positions[fill.Symbol] = position
 
 		// Update cash & value on entry
-		p.currentCash = p.currentCash - position.EnterFillValueNet
-		p.currentValue = p.currentCash + position.EnterFillValueNet
+		p.currentCash = p.currentCash - position.EnterFillValueGross - position.EnterFillFees["TotalFees"] // Todo: Double check this
+		p.currentValue = p.currentCash + position.EnterFillValueGross
 	}
 
 	// Update completed FillEvents
