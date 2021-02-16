@@ -9,7 +9,6 @@ import (
 	"gitlab.com/open-source-keir/financial-modelling/trading/fm-trader/data"
 	"gitlab.com/open-source-keir/financial-modelling/trading/fm-trader/model"
 	"go.uber.org/zap"
-	"math"
 	"time"
 )
 
@@ -84,19 +83,21 @@ func (p *portfolio) GenerateOrders(signal model.SignalEvent) error {
 		return nil
 	}
 
+	// Get current available data and the index of the latest bar
+	currentData, latestBarIndex := p.data.GetLatestData()
+
 	// Construct base OrderEvent
 	order := model.OrderEvent{
 		TraceId:   signal.TraceId,
 		Timestamp: time.Now().Truncate(time.Nanosecond),
 		Symbol:    signal.Symbol,
 		Decision:  decision,
+		Close: currentData.Closes[latestBarIndex],
 	}
 
 	// Size order
-	// Get current available data and the index of the latest bar
-	currentData, latestBarIndex := p.data.GetLatestData()
 
-	err := p.sizeManager.SizeOrder(&order, strength, position, currentData.Closes[latestBarIndex])
+	err := p.sizeManager.SizeOrder(&order, strength, position)
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("failed to size order: %+v", order))
 	}
@@ -152,10 +153,6 @@ func (p *portfolio) parseSignalDecisions(position model.Position, isInvested boo
 // UpdateFromFill updates the portfolio's current positions & historicPositions from a FillEvent
 func (p *portfolio) UpdateFromFill(fill model.FillEvent) error {
 
-	// Get current available data to determine the FillValueGross - would be determined in execution for live trading
-	currentData, latestBarIndex := p.data.GetLatestData()
-	fill.FillValueGross = math.Abs(fill.Quantity) * currentData.Closes[latestBarIndex]
-
 	// Must be an exit
 	if position, isInvested := p.isInvested(fill.Symbol); isInvested {
 		// Exit position instance
@@ -190,10 +187,6 @@ func (p *portfolio) UpdateFromFill(fill model.FillEvent) error {
 
 	positionsJson, _ := json.Marshal(p.positions)
 	p.log.Info(fmt.Sprintf("UPDATE-FROM-FILL{\"Value\": %v, \"Cash\": %v, \"Positions\": %s}", p.currentValue, p.currentCash, string(positionsJson)))
-
-	//positionsOldJson, _ := json.Marshal(p.historicPositions)
-	//p.log.Info(fmt.Sprintf("HISTORIC POSITIONS AFTER FILL %s", string(positionsOldJson)))
-
 
 	return nil
 }

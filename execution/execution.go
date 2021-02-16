@@ -5,6 +5,7 @@ import (
 	"gitlab.com/open-source-keir/financial-modelling/trading/fm-trader/config"
 	"gitlab.com/open-source-keir/financial-modelling/trading/fm-trader/model"
 	"go.uber.org/zap"
+	"math"
 	"time"
 )
 
@@ -34,7 +35,9 @@ func (se *simulatedExecution) GenerateFills(order model.OrderEvent) error {
 	fill.ExchangeFee = fill.CalculateExchangeFee() 		 // 0.0
 	fill.SlippageFee = fill.CalculateSlippageFee()		 // 0.0
 	fill.NetworkFee = fill.CalculateNetworkFee()		 // 0.0
-	fill.FillValueGross = fill.CalculateFillValueGross() // 0.0
+
+	// Since simulatedExecution, approximate FillValueGross with most recent market close
+	fill.FillValueGross = math.Abs(fill.Quantity) * order.Close //fill.CalculateFillValueGross()
 
 	se.eventQ.Add(fill)
 	return nil

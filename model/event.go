@@ -39,6 +39,7 @@ type OrderEvent struct {
 	OrderType 	string  	// MARKET, LIMIT etc
 	Quantity   	float64		// +ve or -ve Quantity depending on Decision
 	Decision  	string		// LONG, CLOSE_LONG, SHORT or CLOSE_SHORT
+	Close		float64
 }
 
 func (o *OrderEvent) IsExit() bool {

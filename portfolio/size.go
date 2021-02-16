@@ -6,14 +6,14 @@ import (
 )
 
 type SizeManager interface {
-	SizeOrder(*model.OrderEvent, float32, model.Position, float64) error
+	SizeOrder(*model.OrderEvent, float32, model.Position) error
 }
 
 type Size struct {
 	DefaultOrderValue 	float64
 }
 
-func (s *Size) SizeOrder(order *model.OrderEvent, decisionStrength float32, position model.Position, price float64) error {
+func (s *Size) SizeOrder(order *model.OrderEvent, decisionStrength float32, position model.Position) error {
 	strength := float64(decisionStrength)
 
 	// If order is an exit
@@ -23,7 +23,7 @@ func (s *Size) SizeOrder(order *model.OrderEvent, decisionStrength float32, posi
 	}
 
 	// If order is an entry
-	defaultOrderSize := math.Floor(s.DefaultOrderValue / price)
+	defaultOrderSize := math.Floor(s.DefaultOrderValue / order.Close)
 	if order.IsLong() {
 		order.Quantity = defaultOrderSize * strength
 	}
