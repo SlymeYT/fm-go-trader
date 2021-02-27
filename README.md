@@ -1,4 +1,5 @@
 # fm-trader
+Event-driven Golang Trader & Backtester for the Financial Modelling project.
 
 ## 1 Data 
 ### 1.1 Using Historic Data
